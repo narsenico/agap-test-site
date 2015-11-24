@@ -1,3 +1,5 @@
-data/*
-node_modules/
+.bowerrc
 *.sublime*
+data/
+node_modules/
+bower_components/

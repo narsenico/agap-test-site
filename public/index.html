@@ -1,17 +1,38 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-	<title>agap test site</title>
+    <title>agap test site</title>
+    <script type="text/javascript" src="js/jquery.min.js"></script>
 </head>
+
 <body>
-
-	<form action="/users/auth" method="POST">
-		<label>uid</label>
-		<input type="text" name="uid">
-		<label>pwd</label>
-		<input type="password" name="pwd">
-		<input type="submit">
-	</form>
-
+    <form id="frmlogin">
+        <label>uid</label>
+        <input type="text" name="uid">
+        <label>pwd</label>
+        <input type="password" name="pwd">
+        <input type="submit" value="Login">
+    </form>
+    <script type="text/javascript">
+    $(function() {
+        $('#frmlogin').on('submit', function(event) {
+            event.preventDefault();
+            $.post('/users/auth', {
+                "uid": this.uid.value,
+                "pwd": this.pwd.value
+            }, 'json').then(function(data) {
+                if (data.user) {
+                    alert('hello ' + data.user.uid);
+                } else {
+                    alert('user or password not valid');
+                }
+            }).fail(function() {
+                alert('fail');
+            });
+        });
+    });
+    </script>
 </body>
+
 </html>

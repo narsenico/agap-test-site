@@ -3,7 +3,7 @@ Come prima cosa chiamare init() per inizializzare il database (creazione databas
 */
 
 var assert = require('assert');
-var l = require('../helper/logger.js');
+var l = require('../helper/logger');
 var utils = require('../helper/utils');
 var fs = require('fs');
 var _ = require('lodash');

@@ -2,7 +2,7 @@ var assert = require('assert');
 var chalk = require('chalk');
 var l = require('./helper/logger');
 var utils = require('./helper/utils');
-var db = require('./models/db');
+var db = require('./models/db-mongo-imp');
 var bodyParser = require('body-parser'); // grazie a questo middleware viene popolato req.body
 var session = require('express-session');
 var express = require('express');
@@ -12,7 +12,9 @@ var PORT = 3000;
 var SESSION_TIMEOUT = 3600000; // 1h
 
 // inizializzo il database
-db.init(function() {
+db.init(function(err) {
+    //
+    assert.equal(err, null);
     // per gestire le sessioni
     app.use(session({
         secret: 'agap',
@@ -26,18 +28,18 @@ db.init(function() {
         //console.dir(req);
         next();
     });
-    // controllo della sessione
-    app.use(function checkSession(req, res, next) {
-    	// TODO: se file statico -> redirect index
-    	// TODO: se /users/auth -> sempre ok
-    	// TODO: se user non in sessione -> 403  
+    // // controllo della sessione
+    // app.use(function checkSession(req, res, next) {
+    // 	// TODO: se file statico -> redirect index
+    // 	// TODO: se /users/auth -> sempre ok
+    // 	// TODO: se user non in sessione -> 403  
 
-    	if (req.session.user) {
-    		next();
-    	} else {
-    		utils.sendHttpError(res, 403);
-    	}
-    });
+    // 	if (req.session.user) {
+    // 		next();
+    // 	} else {
+    // 		utils.sendHttpError(res, 403);
+    // 	}
+    // });
     // for parsing application/json
     app.use(bodyParser.json());
     // for parsing application/x-www-form-urlencoded	
