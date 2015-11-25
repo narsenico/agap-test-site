@@ -6,6 +6,9 @@ var utils = require('../helper/utils');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;
+
+// TODO: uid deve essere univoco
+
 //
 var userSchema = new Schema({
     uid: String,
@@ -60,9 +63,31 @@ function init(cb) {
 } //end init
 
 // cb(err, user)
-function addUser(user, cb) {
-    assert.notEqual(user, null);
-    // TODO: add user
+function addUser(uid, pwd, profile, cb) {
+    assert.notEqual(uid, null);
+    assert.notEqual(pwd, null);
+    new User({
+        uid: uid,
+        pwd: utils.encrypt(pwd),
+        profile: profile || 0
+    }).save(function(err) {
+        if (err) return cb(err);
+        cb(null, { uid: uid, profile: profile });
+    });
+}
+
+// cb(err, user)
+function getUser(uid, cb) {
+    User.findOne({
+        uid: uid
+    }, 'pwd profile', function(err, res) {
+        if (err) return cb(err);
+        if (!res) return cb();
+        cb(null, {
+            uid: uid,
+            profile: res.profile
+        });
+    });
 }
 
 // cb(err, users[])
@@ -98,5 +123,6 @@ exports.RESP_CODES = RESP_CODES;
 exports.PROFILES = PROFILES;
 exports.init = init;
 exports.addUser = addUser;
+exports.getUser = getUser;
 exports.getUsers = getUsers;
 exports.authenticate = authenticate;

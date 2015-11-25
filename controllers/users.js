@@ -1,45 +1,47 @@
 /* controller: users */
 var l = require('../helper/logger');
 var db = require('../models/db-mongo-imp');
+var utils = require('../helper/utils');
 var express = require('express');
 var router = express.Router();
 
-// login utente
-router.post('/auth', function(req, res) {
-    // verifico uid/pwd e crea session.user
-    db.authenticate(req.body.uid, req.body.pwd, function(err, user) {
-        if (err) return utils.sendHttpError(res, 500, err);
-        if (!user) {
-            res.json({
-                user: null
-            });
-        } else {
-            req.session.user = user;
-            res.json({
-                user: user
-            });
-        }
-    });
-});
+// GET /users -> tutti gli utenti
+// GET /users/:uid -> utente
+// GET /users/__current -> utente sessione
+// POST /users (uid,pwd,profile) -> nuovo utente
+// POST /users/:uid (pwd,profile) -> modifica utente
+// DELETE /users/:uid -> rimuovi utente
 
-// aggiunge utente
-router.get('/add/:uid', function(req, res) {
-	console.log(req.params.uid);
-	res.send('ok');
-});
-
-// info utente
-router.get('/info', function(req, res) {
+//
+router.get(['', '/:uid'], utils.checkSession, function(req, res) {
     // recupero da sessione
-    res.send(JSON.stringify(req.session.user));
+    if (!req.params.uid) {
+        db.getUsers(function(err, users) {
+            if (err) return utils.sendHttpError(res, 500, err);
+            res.send(JSON.stringify(users));
+        });
+    } else if (req.params.uid == '__current') {
+        res.json(req.session.user);
+    } else {
+        db.getUser(req.params.uid, function(err, users) {
+            if (err) return utils.sendHttpError(res, 500, err);
+            res.send(JSON.stringify(users));
+        });
+    }
 });
 
-// elenco di tutti gli utenti
-router.get('/all', function(req, res) {
-    db.getUsers(function(err, users) {
-        if (err) return utils.sendHttpError(res, 500, err);
-        res.send(JSON.stringify(users));
-    });
+// aggiunge o modifca utente
+router.post(['', '/:uid'], utils.checkSession, function(req, res) {
+    if (req.params.uid) {
+        // TODO: modifica utente
+        l.debug('edit', req.params.uid);
+        res.json(null);
+    } else {
+        db.addUser(req.body.uid, req.body.pwd, req.body.profile, function(err, user) {
+            if (err) return utils.sendHttpError(res, 500, err);
+            res.json(user);
+        });
+    }
 });
 
 //

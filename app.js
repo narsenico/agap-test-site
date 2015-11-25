@@ -22,36 +22,26 @@ db.init(function(err) {
             maxAge: SESSION_TIMEOUT
         }
     }));
-    //
+    // log di tutte le richieste
     app.use(function log(req, res, next) {
         l.debug('==>', req.session.id, req.method, req.ip, req.originalUrl);
-        //console.dir(req);
         next();
     });
-    // // controllo della sessione
-    // app.use(function checkSession(req, res, next) {
-    // 	// TODO: se file statico -> redirect index
-    // 	// TODO: se /users/auth -> sempre ok
-    // 	// TODO: se user non in sessione -> 403  
-
-    // 	if (req.session.user) {
-    // 		next();
-    // 	} else {
-    // 		utils.sendHttpError(res, 403);
-    // 	}
-    // });
-    // for parsing application/json
+    // parsing application/json
     app.use(bodyParser.json());
-    // for parsing application/x-www-form-urlencoded	
+    // parsing application/x-www-form-urlencoded    
     app.use(bodyParser.urlencoded({
         extended: true
     }));
+    // NB per gestire il controllo della sessione aggiungere utils.checkSession come prima callback
+    //  es: router.get('/ttt', utils.checkSession, function(req, res) { ... })
     // file statici
     app.use(express.static(__dirname + '/public'));
-    // risponde a GET users/xxx
+    // risponde alla root 
+    app.use('/', require('./controllers/main'));
+    // risponde a /users/xxx
     app.use('/users', require('./controllers/users'));
     // TODO: altri router
-
     l.debug('start http listener on port', PORT);
     app.listen(PORT, function() {
         l.info('listening on port', PORT);

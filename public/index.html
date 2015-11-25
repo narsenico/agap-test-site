@@ -7,6 +7,7 @@
 </head>
 
 <body>
+    <a href="/logout">logout</a>
     <form id="frmlogin">
         <label>uid</label>
         <input type="text" name="uid">
@@ -14,22 +15,60 @@
         <input type="password" name="pwd">
         <input type="submit" value="Login">
     </form>
+    <button id="btnadd">add user</button>
+    <button id="btnedit">edit user</button>
+    <button id="btninfo">get info</button>
+    <div id="info"></div>
     <script type="text/javascript">
     $(function() {
         $('#frmlogin').on('submit', function(event) {
             event.preventDefault();
-            $.post('/users/auth', {
+            $.post('/login', {
                 "uid": this.uid.value,
                 "pwd": this.pwd.value
             }, 'json').then(function(data) {
-                if (data.user) {
-                    alert('hello ' + data.user.uid);
+                if (data) {
+                    $('#info').html('hello ' + data.uid);
                 } else {
-                    alert('user or password not valid');
+                    $('#info').html('user or password not valid');
                 }
-            }).fail(function() {
-                alert('fail');
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                $('#info').html(textStatus + ': ' + errorThrown);
             });
+        });
+
+        $('#btninfo').on('click', function() {
+            $.getJSON('/users/__current')
+                .then(function(data) {
+                    $('#info').html(JSON.stringify(data));
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    $('#info').html(textStatus + ': ' + errorThrown);
+                });
+        });
+
+        $('#btnadd').on('click', function() {
+            $.post('/users', {
+                    uid: $('#frmlogin input[name=uid]').val(),
+                    pwd: $('#frmlogin input[name=pwd]').val(),
+                    profile: 1
+                }, 'json')
+                .then(function(data) {
+                    $('#info').html(JSON.stringify(data));
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    $('#info').html(textStatus + ': ' + errorThrown);
+                });
+        });
+
+        $('#btnedit').on('click', function() {
+            $.post('/users/' + $('#frmlogin input[name=uid]').val(), {
+                    pwd: $('#frmlogin input[name=pwd]').val(),
+                    profile: 1
+                }, 'json')
+                .then(function(data) {
+                    $('#info').html(JSON.stringify(data));
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    $('#info').html(textStatus + ': ' + errorThrown);
+                });
         });
     });
     </script>
