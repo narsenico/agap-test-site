@@ -7,29 +7,22 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;
 
-// TODO: uid deve essere univoco
-
 //
-var userSchema = new Schema({
-    uid: String,
-    pwd: String,
+var User = mongoose.model('User', new Schema({
+    uid: { type: String, index: { unique: true } },
+    pwd: { type: String, required: true },
     profile: Number
+}));
+User.on('index', function(err) {
+    if (err) console.error(err);
 });
-userSchema.pre('save', function(next) {
-    l.debug('save user', this.get('uid'));
-    next();
-});
-var User = mongoose.model('User', userSchema);
+
 //
 var url = 'mongodb://localhost:27017/test';
 //
 var OBJ_USER = {
     uid: null,
     profile: 0
-};
-//
-var RESP_CODES = {
-    ERR_USER_ALREADY_PRESENT: -1001
 };
 //
 var PROFILES = {
@@ -46,13 +39,7 @@ function init(cb) {
         }, function(err, res) {
             if (err) return cb(err);
             if (res.length === 0) {
-                var user = new User();
-                user.uid = 'admin';
-                user.pwd = utils.encrypt('admin');
-                user.profile = PROFILES.ADMINISTRATOR;
-                user.save(function(err) {
-                    cb(err);
-                });
+                addUser('admin', 'admin', PROFILES.ADMINISTRATOR, cb);
             } else {
                 cb();
             }
@@ -71,7 +58,13 @@ function addUser(uid, pwd, profile, cb) {
         pwd: utils.encrypt(pwd),
         profile: profile || 0
     }).save(function(err) {
-        if (err) return cb(err);
+        if (err) {
+            if (11000 === err.code || 11001 === err.code) {
+                return cb(utils.newError(utils.ERROR_CODES.ERR_USER_ALREADY_PRESENT, "User already present"));
+            } else {
+                return cb(err);
+            }
+        }
         cb(null, { uid: uid, profile: profile });
     });
 }
@@ -95,12 +88,15 @@ function getUsers(cb) {
     User.find({}, function(err, res) {
         if (err) return cb(err);
         cb(null, _.map(res, function(user) {
+            //estraggo solo uid e profile
             return _.pick(user, ['uid', 'profile']);
         }));
     });
 }
 
 // cb(err, user)
+// cb(null, user) -> ok
+// cd() -> no auth
 function authenticate(uid, pwd, cb) {
     User.findOne({
         uid: uid
@@ -119,7 +115,6 @@ function authenticate(uid, pwd, cb) {
 }
 
 //
-exports.RESP_CODES = RESP_CODES;
 exports.PROFILES = PROFILES;
 exports.init = init;
 exports.addUser = addUser;

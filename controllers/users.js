@@ -18,14 +18,14 @@ router.get(['', '/:uid'], utils.checkSession, function(req, res) {
     if (!req.params.uid) {
         db.getUsers(function(err, users) {
             if (err) return utils.sendHttpError(res, 500, err);
-            res.send(JSON.stringify(users));
+            utils.sendRestOk(res, users);
         });
     } else if (req.params.uid == '__current') {
-        res.json(req.session.user);
+        utils.sendRestOk(res, req.session.user);
     } else {
-        db.getUser(req.params.uid, function(err, users) {
+        db.getUser(req.params.uid, function(err, user) {
             if (err) return utils.sendHttpError(res, 500, err);
-            res.send(JSON.stringify(users));
+            utils.sendRestOk(res, user);
         });
     }
 });
@@ -38,7 +38,13 @@ router.post(['', '/:uid'], utils.checkSession, function(req, res) {
         res.json(null);
     } else {
         db.addUser(req.body.uid, req.body.pwd, req.body.profile, function(err, user) {
-            if (err) return utils.sendHttpError(res, 500, err);
+            if (err) {
+            	if (err.code === utils.ERROR_CODES.ERR_USER_ALREADY_PRESENT) {
+            		return utils.sendRestErr(res, err.code, err.message);
+            	} else {
+            		return utils.sendHttpError(res, 500, err);
+            	}
+            }
             res.json(user);
         });
     }

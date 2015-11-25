@@ -17,10 +17,10 @@ router.post('/login', function(req, res) {
     db.authenticate(req.body.uid, req.body.pwd, function(err, user) {
         if (err) return utils.sendHttpError(res, 500, err);
         if (!user) {
-            res.json(null);
+            utils.sendRestErr(res, utils.ERROR_CODES.ERR_USER_OR_PASSWORD_NOT_VALID, 'User or password not valid');
         } else {
             req.session.user = user;
-            res.json(user);
+            utils.sendRestOk(res, user);
         }
     });
 });

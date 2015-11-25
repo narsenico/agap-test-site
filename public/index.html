@@ -27,10 +27,10 @@
                 "uid": this.uid.value,
                 "pwd": this.pwd.value
             }, 'json').then(function(data) {
-                if (data) {
-                    $('#info').html('hello ' + data.uid);
+                if (data.resp == 'ok') {
+                    $('#info').html('hello ' + data.data.uid);
                 } else {
-                    $('#info').html('user or password not valid');
+                    $('#info').html(JSON.stringify(data));
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 $('#info').html(textStatus + ': ' + errorThrown);
